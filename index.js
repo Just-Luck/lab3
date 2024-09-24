@@ -1,4 +1,6 @@
 function animaster() {
+    const _steps = [];
+
     function fadeIn(element, duration) {
         element.style.transitionDuration = `${duration}ms`;
         element.classList.remove('hide');
@@ -22,43 +24,24 @@ function animaster() {
     }
 
     function moveAndHide(element, totalDuration) {
-        let moveTimeout;
-        let hideTimeout;
-
-        const moveDuration = (2 / 5) * totalDuration;
-        const hideDuration = (3 / 5) * totalDuration;
-
-        move(element, moveDuration, { x: 100, y: 20 });
-
-        moveTimeout = setTimeout(() => {
-            fadeOut(element, hideDuration);
-        }, moveDuration);
-
-        return {
-            reset: () => {
-                clearTimeout(moveTimeout);
-                clearTimeout(hideTimeout);
-                fadeOut(element, 0); // мгновенно скрыть элемент
-                resetMoveAndScale(element); // сбросить трансформации
-            }
-        };
+        return this.addMove(totalDuration * 2 / 5, { x: 100, y: 20 })
+                   .addFadeOut(totalDuration * 3 / 5)
+                   .play(element);
     }
 
     function showAndHide(element, totalDuration) {
-        fadeIn(element, totalDuration / 3);
-        setTimeout(() => {
-            fadeOut(element, totalDuration / 3);
-        }, totalDuration / 3);
+        return this.addFadeIn(totalDuration / 3)
+                   .addFadeOut(totalDuration / 3)
+                   .play(element);
     }
 
     function heartBeating(element) {
         let intervalId;
 
         const beat = () => {
-            scale(element, 500, 1.4);
-            setTimeout(() => {
-                scale(element, 500, 1);
-            }, 500);
+            this.addScale(500, 1.4)
+                .addScale(500, 1)
+                .play(element);
         };
 
         beat();
@@ -84,7 +67,67 @@ function animaster() {
 
     function resetMoveAndScale(element) {
         element.style.transform = null;
-        resetFadeOut(element)
+        resetFadeOut(element);
+    }
+
+    // Методы добавления шагов анимации
+    function addMove(duration, translation) {
+        _steps.push({
+            operation: 'move',
+            duration: duration,
+            parameters: translation
+        });
+        return this;
+    }
+
+    function addFadeIn(duration) {
+        _steps.push({
+            operation: 'fadeIn',
+            duration: duration
+        });
+        return this;
+    }
+
+    function addFadeOut(duration) {
+        _steps.push({
+            operation: 'fadeOut',
+            duration: duration
+        });
+        return this;
+    }
+
+    function addScale(duration, ratio) {
+        _steps.push({
+            operation: 'scale',
+            duration: duration,
+            parameters: ratio
+        });
+        return this;
+    }
+
+    // Метод выполнения всех шагов анимации
+    function play(element) {
+        let totalDuration = 0;
+
+        _steps.forEach((step) => {
+            setTimeout(() => {
+                switch (step.operation) {
+                    case 'move':
+                        move(element, step.duration, step.parameters);
+                        break;
+                    case 'fadeIn':
+                        fadeIn(element, step.duration);
+                        break;
+                    case 'fadeOut':
+                        fadeOut(element, step.duration);
+                        break;
+                    case 'scale':
+                        scale(element, step.duration, step.parameters);
+                        break;
+                }
+            }, totalDuration);
+            totalDuration += step.duration;
+        });
     }
 
     return {
@@ -99,7 +142,14 @@ function animaster() {
 
         resetFadeIn,
         resetFadeOut,
-        resetMoveAndScale
+        resetMoveAndScale,
+
+        addMove,
+        addFadeIn,
+        addFadeOut,
+        addScale,
+
+        play
     };
 }
 
@@ -107,7 +157,6 @@ addListeners();
 
 function addListeners() {
     let heartBeatController;
-    let moveAndHideController;
 
     document.getElementById('fadeInPlay')
         .addEventListener('click', function () {
@@ -153,10 +202,8 @@ function addListeners() {
 
     document.getElementById('moveAndHideReset')
         .addEventListener('click', function () {
-            if (moveAndHideController) {
-                moveAndHideController.reset();
-                moveAndHideController = null;
-            }
+            const block = document.getElementById('moveAndHideBlock');
+            animaster().resetMoveAndScale(block);
         });
 
     document.getElementById('showAndHidePlay')
@@ -181,7 +228,7 @@ function addListeners() {
         .addEventListener('click', function () {
             if (heartBeatController) {
                 heartBeatController.stop();
-                heartBeatController = null; 
+                heartBeatController = null;
             }
         });
 }
