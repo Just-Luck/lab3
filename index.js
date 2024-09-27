@@ -36,20 +36,19 @@ function animaster() {
     function resetStyles(element) {
         const style = initialStyles[element.id];
         element.removeAttribute('style');
-        if(style.visible === 'hide') element.classList = 'block hide'
+        if (style.visible === 'hide') element.classList = 'block hide';
         else element.classList = 'block';
     }
 
     function addDelay(duration) {
-        _steps.push({ operation: 'delay', duration: duration });
+        _steps.push({ operation: 'delay', duration });
         return this;
     }
 
     function moveAndHide(element, totalDuration) {
-        const anim = animaster();
         return {
             play: () => {
-                anim.addMove(totalDuration * 2 / 5, { x: 100, y: 20 })
+                this.addMove(totalDuration * 2 / 5, { x: 100, y: 20 })
                     .addFadeOut(totalDuration * 3 / 5)
                     .play(element);
             },
@@ -77,38 +76,34 @@ function animaster() {
         let intervalId;
         const anim = animaster();
 
-        const beat = () => {
-            anim.addScale(500, 1.4)
-                .addScale(500, 1)
-                .play(element);
-        };
+        anim.addScale(500, 1.4).addScale(500, 1).play(element, true);
 
-        beat();
-        intervalId = setInterval(beat, 1000);
+        // beat();
+        // intervalId = setInterval(beat, 1000);
 
         return {
-            stop: () => clearInterval(intervalId),
+            stop: () => anim.stop(),
             reset: () => resetStyles(element)
         };
     }
 
     function addMove(duration, translation) {
-        _steps.push({ operation: 'move', duration: duration, parameters: translation });
+        _steps.push({ operation: 'move', duration, parameters: translation });
         return this;
     }
 
     function addFadeIn(duration) {
-        _steps.push({ operation: 'fadeIn', duration: duration });
+        _steps.push({ operation: 'fadeIn', duration });
         return this;
     }
 
     function addFadeOut(duration) {
-        _steps.push({ operation: 'fadeOut', duration: duration });
+        _steps.push({ operation: 'fadeOut', duration });
         return this;
     }
 
     function addScale(duration, ratio) {
-        _steps.push({ operation: 'scale', duration: duration, parameters: ratio });
+        _steps.push({ operation: 'scale', duration, parameters: ratio });
         return this;
     }
 
@@ -147,7 +142,10 @@ function animaster() {
         }
 
         return {
-            stop: () => clearInterval(intervalId),
+            stop: () => {
+                console.log(777)
+                clearInterval(intervalId)
+            },
             reset: () => resetStyles(element)
         };
     }
